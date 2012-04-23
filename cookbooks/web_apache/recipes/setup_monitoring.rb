@@ -72,6 +72,15 @@ else
   port = node[:apache][:listen_ports]
 end
 
+#checking node[:apache][:listen_ports]
+#  it can be a string if single port is defined
+#  or array if multiple ports are defined
+if node[:apache][:listen_ports].kind_of?(Array)
+  port = node[:apache][:listen_ports][0]
+else
+  port = node[:apache][:listen_ports]
+end
+
 # add a collectd config file for the Apache collectd plugin and restart collectd if necessary
 template File.join(node[:rightscale][:collectd_plugin_dir], 'apache.conf') do
   backup false
