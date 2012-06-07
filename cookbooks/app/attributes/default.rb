@@ -13,3 +13,7 @@ set_unless[:app][:port] = "8000"
 # By default listen on the first private IP
 # This is a set instead of set_unless to support start/stop when the IP changes.
 set[:app][:ip] = node[:cloud][:private_ips][0]
+# Application database name
+set_unless[:app][:db][:schema]=""
+# Type of database adapter which rails application will use
+set_unless[:app][:db][:adapter]="mysql"
