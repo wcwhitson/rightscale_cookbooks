@@ -14,11 +14,6 @@ depends "rightscale"
 recipe  "app_tomcat::default", "Installs the tomcat application server."
 
 # optional attributes
-attribute "app_tomcat/db_name",
-  :display_name => "Database Name",
-  :description => "Enter the name of the MySQL database to use. Ex: mydatabase",
-  :required => "required"
-
 
 #Code repo attributes
 attribute "app_tomcat/code/root_war",
@@ -63,13 +58,6 @@ attribute "app_tomcat/java/MaxNewSize",
   :description => "The java MaxNewSize argument (i.e. 256m)",
   :required => "optional",
   :default => "256m"
-
-attribute "app_tomcat/db_adapter",
-  :display_name => "Database adapter for application ",
-  :description => "Enter database adapter which will be used to connect to the database. example: mysql",
-  :default => "mysql",
-  :choice => [ "mysql", "postgresql" ],
-  :recipes => ["app_tomcat::default"]
 
 attribute "app_tomcat/datasource_name",
   :display_name => "Container datasource  name",
