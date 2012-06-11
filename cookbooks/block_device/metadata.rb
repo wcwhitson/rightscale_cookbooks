@@ -3,7 +3,7 @@ maintainer_email "support@rightscale.com"
 license          "Copyright RightScale, Inc. All rights reserved."
 description      "Installs/Configures block device storage."
 long_description IO.read(File.join(File.dirname(__FILE__), 'README.rdoc'))
-version          "0.1"
+version          "12.1.0"
 
 depends "rightscale"
 
@@ -60,7 +60,7 @@ ros_clouds = [
 
 attribute "block_device/devices_to_use",
   :display_name => "Block Device(s) to Operate On",
-  :description => "The block device(s) to operate on. Can be a comma-separated list of device names or '*' to indicate all devices.",
+  :description => "The block device(s) to operate on. Can be a comma-separated list of device names or '*' to indicate all devices. Example: device1",
   :required => "recommended",
   :default => "device1",
   :recipes => all_recipes
@@ -71,14 +71,14 @@ grouping "block_device/devices/default",
   :description => "Default attributes for all block devices."
 
 attribute "block_device/devices/default/backup/primary/cred/user",
-  :display_name => "Backup Primary User (default)",
+  :display_name => "Primary Backup User (default)",
   :description => "Primary cloud authentication credentials. For Rackspace Cloud Files, use your Rackspace login username (e.g., cred:RACKSPACE_USERNAME). For clouds that do not require primary credentials (e.g., Amazon), set to 'ignore'.",
   :required => "recommended",
   :default => "",
   :recipes => [ "block_device::default" ]
 
 attribute "block_device/devices/default/backup/primary/cred/secret",
-  :display_name => "Backup Primary Secret (default)",
+  :display_name => "Primary Backup Secret (default)",
   :description => "Primary cloud authentication credentials. For Rackspace Cloud Files, use your Rackspace account API key (e.g., cred:RACKSPACE_AUTH_KEY). For clouds that do not require primary credentials (e.g., Amazon), set to 'ignore'.",
   :required => "recommended",
   :default => "",
