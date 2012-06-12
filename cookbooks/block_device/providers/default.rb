@@ -74,7 +74,12 @@ action :primary_restore do
     :storage_secret => new_resource.primary_secret
   }
 
-  device.primary_restore(new_resource.lineage, restore_args)
+  begin
+    device.primary_restore(new_resource.lineage, restore_args)
+  rescue Exception
+    Chef::Log.error "Primary restore failed, perhaps inputs are specified incorrectly; please run do_force_reset before retrying."
+    raise
+  end
 end
 
 # Prepare device for secondary backup
@@ -97,7 +102,12 @@ action :secondary_restore do
     :vg_data_percentage => new_resource.vg_data_percentage
   }
 
-  device.secondary_restore(new_resource.lineage, restore_args)
+  begin
+    device.secondary_restore(new_resource.lineage, restore_args)
+  rescue Exception
+    Chef::Log.error "Secondary restore failed, perhaps inputs are specified incorrectly; please run do_force_reset before retrying."
+    raise
+  end
 end
 
 # Unmount and delete the attached block device(s)
