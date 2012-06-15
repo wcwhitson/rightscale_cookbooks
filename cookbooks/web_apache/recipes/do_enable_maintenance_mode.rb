@@ -36,7 +36,7 @@ if node[:web_apache][:maintenance_mode]== "enable"
     only_if do node[:web_apache][:maintenance_file].empty? end
   end
 
-  bash "Unpack #{tmp_archive_path} to #{new_resource.destination}" do
+  bash "Unpack /tmp/maintenance.tar.gz to #{node[:web_apache][:docroot]}/system/" do
     flags "-ex"
      code <<-EOH
        tar xzf /tmp/maintenance.tar.gz -C #{node[:web_apache][:docroot]}/system/
