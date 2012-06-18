@@ -43,7 +43,7 @@ when "centos", "fedora", "suse", "redhat", "redhatenterpriseserver"
   case node[:app_tomcat][:db_adapter]
   when "mysql"
     node[:app][:packages] = [
-      "eclipse-ecj",
+      "ecj",
       "tomcat6",
       "tomcat6-admin-webapps",
       "tomcat6-webapps",
