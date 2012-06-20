@@ -52,7 +52,7 @@ when "centos", "fedora", "suse", "redhat", "redhatenterpriseserver"
     ]
   when "postgresql"
     node[:app][:packages] = [
-      "eclipse-ecj",
+      "ecj",
       "tomcat6",
       "tomcat6-admin-webapps",
       "tomcat6-webapps",
