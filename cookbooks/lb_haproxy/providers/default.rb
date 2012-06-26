@@ -67,7 +67,7 @@ action :install do
     owner "haproxy"
     group "haproxy"
     mode "0400"
-    default_backend = node[:lb][:vhost_names].gsub(/\s+/, "").split(",").first.gsub(/\./, "_") + "_backend"
+    default_backend = node[:lb][:pool_names].gsub(/\s+/, "").split(",").first.gsub(/\./, "_") + "_backend"
     variables(
       :default_backend_line => default_backend
     )
@@ -98,10 +98,10 @@ end
 
 action :add_vhost do
 
-  vhost_name = new_resource.vhost_name
+  pool_name = new_resource.pool_name
 
   # Create the directory for vhost server files.
-  directory "/home/lb/#{node[:lb][:service][:provider]}.d/#{vhost_name}" do
+  directory "/home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}" do
     owner "haproxy"
     group "haproxy"
     mode 0755
@@ -110,13 +110,13 @@ action :add_vhost do
   end
 
   # Create backend haproxy files for vhost it will answer for.
-  template ::File.join("/home/lb/#{node[:lb][:service][:provider]}.d", "#{vhost_name}.cfg") do
+  template ::File.join("/home/lb/#{node[:lb][:service][:provider]}.d", "#{pool_name}.cfg") do
     source "haproxy_backend.erb"
     cookbook 'lb_haproxy'
     owner "haproxy"
     group "haproxy"
     mode "0400"
-    backend_name = vhost_name.gsub(".", "_") + "_backend"
+    backend_name = pool_name.gsub(".", "_") + "_backend"
     stats_uri = "stats uri #{node[:lb][:stats_uri]}" unless "#{node[:lb][:stats_uri]}".empty?
     stats_auth = "stats auth #{node[:lb][:stats_user]}:#{node[:lb][:stats_password]}" unless \
                 "#{node[:lb][:stats_user]}".empty? || "#{node[:lb][:stats_password]}".empty?
@@ -141,16 +141,16 @@ action :add_vhost do
   end
 
   # Tag this server as a load balancer for vhost it will answer for so app servers can send requests to it.
-  right_link_tag "loadbalancer:#{vhost_name}=lb"
+  right_link_tag "loadbalancer:#{pool_name}=lb"
 
 end
 
 
 action :attach do
 
-  vhost_name = new_resource.vhost_name
+  pool_name = new_resource.pool_name
 
-  log "  Attaching #{new_resource.backend_id} / #{new_resource.backend_ip} / #{vhost_name}"
+  log "  Attaching #{new_resource.backend_id} / #{new_resource.backend_ip} / #{pool_name}"
 
   # Create haproxy service.
   service "haproxy" do
@@ -168,7 +168,7 @@ action :attach do
   end
 
   # Create an individual server file for each vhost and notify the concatenation script if necessary.
-  template ::File.join("/home/lb/#{node[:lb][:service][:provider]}.d", vhost_name, new_resource.backend_id) do
+  template ::File.join("/home/lb/#{node[:lb][:service][:provider]}.d", pool_name, new_resource.backend_id) do
     source "haproxy_server.erb"
     owner "haproxy"
     group "haproxy"
@@ -190,9 +190,9 @@ end
 
 action :attach_request do
 
-  vhost_name = new_resource.vhost_name
+  pool_name = new_resource.pool_name
 
-  log "  Attach request for #{new_resource.backend_id} / #{new_resource.backend_ip} / #{vhost_name}"
+  log "  Attach request for #{new_resource.backend_id} / #{new_resource.backend_ip} / #{pool_name}"
 
   # Run remote_recipe for each vhost app server wants to be part of.
   remote_recipe "Attach me to load balancer" do
@@ -201,9 +201,9 @@ action :attach_request do
       :backend_ip => new_resource.backend_ip,
       :backend_id => new_resource.backend_id,
       :backend_port => new_resource.backend_port,
-      :vhost_names => vhost_name
+      :pool_names => pool_name
     }
-    recipients_tags "loadbalancer:#{vhost_name}=lb"
+    recipients_tags "loadbalancer:#{pool_name}=lb"
   end
 
 end
@@ -211,9 +211,9 @@ end
 
 action :detach do
 
-  vhost_name = new_resource.vhost_name
+  pool_name = new_resource.pool_name
 
-  log "  Detaching #{new_resource.backend_id} from #{vhost_name}"
+  log "  Detaching #{new_resource.backend_id} from #{pool_name}"
 
   # Create haproxy service.
   service "haproxy" do
@@ -231,7 +231,7 @@ action :detach do
   end
 
   # Delete the individual server file and notify the concatenation script if necessary.
-  file ::File.join("/home/lb/#{node[:lb][:service][:provider]}.d", vhost_name, new_resource.backend_id) do
+  file ::File.join("/home/lb/#{node[:lb][:service][:provider]}.d", pool_name, new_resource.backend_id) do
     action :delete
     backup false
     notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
@@ -242,18 +242,18 @@ end
 
 action :detach_request do
 
-  vhost_name = new_resource.vhost_name
+  pool_name = new_resource.pool_name
 
-  log "  Detach request for #{new_resource.backend_id} / #{vhost_name}"
+  log "  Detach request for #{new_resource.backend_id} / #{pool_name}"
 
   # Run remote_recipe for each vhost app server is part of.
   remote_recipe "Detach me from load balancer" do
     recipe "lb::handle_detach"
     attributes :remote_recipe => {
       :backend_id => new_resource.backend_id,
-      :vhost_names => vhost_name
+      :pool_names => pool_name
     }
-    recipients_tags "loadbalancer:#{vhost_name}=lb"
+    recipients_tags "loadbalancer:#{pool_name}=lb"
   end
 
 end

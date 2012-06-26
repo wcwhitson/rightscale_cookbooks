@@ -18,7 +18,7 @@ end
 # Below are the attributes defined by the LB resource interface.
 #
 
-attribute :vhost_name, :kind_of => String, :name_attribute => true
+attribute :pool_name, :kind_of => String, :name_attribute => true
 
 # Attaching/Detaching options
 attribute :backend_id, :kind_of => String, :default => ""
