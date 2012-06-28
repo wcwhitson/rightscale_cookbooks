@@ -201,7 +201,7 @@ action :advanced_configs do
   # pool_name = "/appserver"
   # pool_name = "host.com/appserver"
   case pool_name
-    when pool_name.include? "/"
+    when (pool_name.include? "/")
         # replace all '/' to "_"
         acl_name =pool_name.gsub(/[\/]/, '_')
 
@@ -214,8 +214,6 @@ action :advanced_configs do
            echo $acl_condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/acl.conf
            EOH
       end
-        # Если пользователь введет /УРЛ и он будет восприниматься сервером как УРЛ
-        # нам надо отрезать "/" на моменте создания тэгов и папок для vhost
       # RESULT EXAMPLE
       # use_backend 2_backend if url_serverid
       bash "Creating use_backend rule configs" do
