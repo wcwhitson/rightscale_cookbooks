@@ -183,10 +183,85 @@ action :attach do
       :session_sticky => new_resource.session_sticky,
       :health_check_uri => node[:lb][:health_check_uri]
     )
-    notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
+    #notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
+  end
+
+  node[:lb][:advanced_configuration]= true
+  # this will add  /advanced_configs directory
+  # and home/lb/haproxy-cat.sh will create new
+  action_advanced_configs if node[:lb][:advanced_configuration]== true
+
+end
+action :advanced_configs do
+
+  pool_name = new_resource.pool_name
+  # if pool_name include "/" we assume that we have URI in tag so we will
+  # generate new acls and conditions
+
+  # pool_name = "/appserver"
+  # pool_name = "host.com/appserver"
+  case pool_name
+    when pool_name.include? "/"
+        # replace all '/' to "_"
+        acl_name =pool_name.gsub(/[\/]/, '_')
+
+        # RESULT EXAMPLE
+        # acl url_serverid  path_beg    /serverid
+      bash "Creating acl rules config file" do
+           flags "-ex"
+           code <<-EOH
+           acl_condition="acl acl_#{acl_name} path_beg #{pool_name}"
+           echo $acl_condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/acl.conf
+           EOH
+      end
+        # Если пользователь введет /УРЛ и он будет восприниматься сервером как УРЛ
+        # нам надо отрезать "/" на моменте создания тэгов и папок для vhost
+      # RESULT EXAMPLE
+      # use_backend 2_backend if url_serverid
+      bash "Creating use_backend rule configs" do
+        flags "-ex"
+        code <<-EOH
+          condition="use_backend #{pool_name}_backend if acl_#{acl_name}"
+          echo $condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/use_backend.conf
+        EOH
+        # recreating rightscale_lb.cfg
+        notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
+      end
+
+    else
+    # we assume that user enter FQDN
+
+      # RESULT EXAMPLE
+      # acl ns-ss-db1-test-rightscale-com_acl  hdr_dom(host) -i ns-ss-db1.test.rightscale.com
+      bash "Creating acl rules config file" do
+        flags "-ex"
+        code <<-EOH
+           acl_condition="acl acl_#{new_resource.pool_name} hdr_dom(host) -i #{new_resource.pool_name}"
+           echo $acl_condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/acl.conf
+        EOH
+      end
+
+      # now we will create "/home/lb/haproxy.d/advanced_configs/use_backend.conf"
+      #
+      # CODE DRAFT EXAMPLE
+      # use_backend #{lb:pool_name} node[:lb][:advanced_config][:use_backend_condition] ns-ss-db1-test-rightscale-com_acl
+      # RESULT EXAMPLE
+      # use_backend 1_backend if ns-ss-db1-test-rightscale-com_acl
+      bash "Creating use_backend rule configs" do
+        flags "-ex"
+        code <<-EOH
+          condition="use_backend pool_#{new_resource.pool_name} if acl_#{new_resource.pool_name}"
+          echo $condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/use_backend.conf
+        EOH
+        # recreating rightscale_lb.cfg
+        notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
+      end
+
+# case end
   end
 
 end
+
 
 action :attach_request do
 

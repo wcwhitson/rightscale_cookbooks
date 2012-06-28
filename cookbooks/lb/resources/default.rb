@@ -33,7 +33,7 @@ attribute :service_lb_name, :kind_of => String, :default => ""
 attribute :service_account_id, :kind_of => String, :default => ""
 attribute :service_account_secret, :kind_of => String, :default => ""
 
-
+attribute :pool_name_full => String, :default => ""
 # General LoadBalance Actions
 #
 # Below are the actions defined by the lb resource interface.
@@ -100,5 +100,7 @@ add_action :restart
 # load balancer on the RightScale dashboard.
 #
 add_action :setup_monitoring
+
+add_action :advanced_configs
 
 actions @action_list
