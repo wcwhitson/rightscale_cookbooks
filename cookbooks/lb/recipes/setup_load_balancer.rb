@@ -17,11 +17,11 @@ log "  Install load balancer"
 
 # In the 'install' action, the name is not used, but the provider from default recipe is needed.
 # Any vhost name set with provider can be used. Using first one in list to make it simple.
-lb vhosts(POOL_NAMES).first do
+lb vhosts(POOL_NAMES).default(0) do
   action :install
 end
 
-vhosts(POOL_NAMES).each do |pool_name|
+vhosts(POOL_NAMES).each_key do |pool_name|
   lb pool_name do
     action :add_vhost
   end

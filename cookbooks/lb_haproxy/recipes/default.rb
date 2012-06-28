@@ -15,7 +15,7 @@ log "  Override load balancer to use HAProxy."
 node[:lb][:service][:provider] = "lb_haproxy"
 
 vhosts(node[:lb][:pool_names]).each do |pool_name_short, pool_name_full|
-  log "  Setup default load balancer resource for vhost '#{pool_name}'."
+  log "  Setup default load balancer resource for vhost '#{pool_name_short}'."
   # replace all '/' to "_"
   #pool_name_short = pool_name.gsub(/[\/]/, '_')
 
