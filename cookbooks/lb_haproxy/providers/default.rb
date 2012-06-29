@@ -231,19 +231,6 @@ action :advanced_configs do
         not_if do ::File.open(acl_config_file, 'r') { |f| f.read }.include? "#{acl_rule}" end
       end
 
-      # RESULT EXAMPLE
-      # use_backend 2_backend if url_serverid
-      use_backend_rule = "use_backend #{pool_name}_backend if acl_#{pool_name}"
-      bash "Creating use_backend rule configs" do
-        flags "-ex"
-        code <<-EOH
-          condition="#{use_backend_rule}"
-          echo $condition >> #{backend_config_file}
-        EOH
-        not_if do ::File.open(backend_config_file, 'r') { |f| f.read }.include? "#{use_backend_rule}" end
-        notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
-      end
-
     else
     # we assume that user enter FQDN
 
@@ -258,22 +245,20 @@ action :advanced_configs do
         EOH
         not_if do ::File.open(acl_config_file, 'r') { |f| f.read }.include? "#{acl_rule}" end
       end
-
-      # RESULT EXAMPLE
-      # use_backend 1_backend if ns-ss-db1-test-rightscale-com_acl
-      use_backend_rule = "use_backend pool_#{new_resource.pool_name} if acl_#{new_resource.pool_name}"
-      bash "Creating use_backend rule configs" do
-        flags "-ex"
-        code <<-EOH
-          condition="#{use_backend_rule}"
-          echo $condition >> #{backend_config_file}
-        EOH
-        not_if do ::File.open(backend_config_file, 'r') { |f| f.read }.include? "#{use_backend_rule}" end
-        notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
-      end
-
-
   end
+
+  # RESULT EXAMPLE
+  # use_backend 2_backend if url_serverid
+  use_backend_rule = "use_backend #{pool_name}_backend if acl_#{pool_name}"
+  bash "Creating use_backend rule configs" do
+    flags "-ex"
+    code <<-EOH
+      condition="#{use_backend_rule}"
+      echo $condition >> #{backend_config_file}
+    EOH
+    not_if do ::File.open(backend_config_file, 'r') { |f| f.read }.include? "#{use_backend_rule}" end
+  end
+
 
   execute "/home/lb/haproxy-cat.sh" do
     user "haproxy"
