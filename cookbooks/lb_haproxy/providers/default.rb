@@ -195,13 +195,17 @@ end
 action :advanced_configs do
 
   pool_name = new_resource.pool_name
+  pool_name_full =  new_resource.pool_name_full
+
+  log "!!!pool name is #{pool_name}"
+  log "!!!pool name is #{pool_name_full}"
   # if pool_name include "/" we assume that we have URI in tag so we will
   # generate new acls and conditions
 
   # pool_name = "/appserver"
   # pool_name = "host.com/appserver"
   case pool_name
-    when (pool_name.include? "/")
+    when (pool_name.include? "+")
         # replace all '/' to "_"
         acl_name =pool_name.gsub(/[\/]/, '_')
 
