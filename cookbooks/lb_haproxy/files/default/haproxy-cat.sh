@@ -24,13 +24,14 @@ do
   fi
 done
 
+
 for single_vhost in ${vhosts}
 do
 #  acl=${single_vhost//\./_}"_acl"
 #  echo "  acl ${acl} hdr_dom(host) -i ${single_vhost}" >> ${CONF_FILE}
 
- if [ -e /home/lb/lb_haproxy.d/${single_vhost}/advanced_configs/acl.conf ]; then
-    cat "/home/lb/lb_haproxy.d/${single_vhost}/advanced_configs/acl.conf" >> ${CONF_FILE}
+ if [ -e /home/lb/lb_haproxy.d/acl_${single_vhost}.conf ]; then
+    cat "/home/lb/lb_haproxy.d/acl_${single_vhost}.conf" >> ${CONF_FILE}
   fi
 
 done
@@ -44,9 +45,9 @@ do
 #  echo "  use_backend ${backend} if ${acl}" >> ${CONF_FILE}
 
   # this will add advanced use_backend statements to config file
-  if [ -r  /home/lb/lb_haproxy.d/${single_vhost}/advanced_configs/use_backend.conf ];
+  if [ -r  /home/lb/lb_haproxy.d/use_backend_${single_vhost}.conf ];
   then
-    cat /home/lb/lb_haproxy.d/${single_vhost}/advanced_configs/use_backend.conf>> ${CONF_FILE}
+    cat /home/lb/lb_haproxy.d/use_backend_${single_vhost}.conf>> ${CONF_FILE}
   fi
 
 done

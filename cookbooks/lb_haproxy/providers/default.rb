@@ -131,6 +131,10 @@ action :add_vhost do
     )
   end
 
+  action_advanced_configs
+  #if node[:lb][:advanced_configuration]== true
+
+
   # (Re)generate the haproxy config file.
   execute "/home/lb/haproxy-cat.sh" do
     user "haproxy"
@@ -189,7 +193,8 @@ action :attach do
   node[:lb][:advanced_configuration]= true
   # this will add  /advanced_configs directory
   # and home/lb/haproxy-cat.sh will create new
-  action_advanced_configs if node[:lb][:advanced_configuration]== true
+  action_advanced_configs
+  #if node[:lb][:advanced_configuration]== true
 
 end
 action :advanced_configs do
@@ -197,36 +202,46 @@ action :advanced_configs do
   pool_name = new_resource.pool_name
   pool_name_full =  new_resource.pool_name_full
 
-  log "!!!pool name is #{pool_name}"
-  log "!!!pool name is #{pool_name_full}"
+  log "  Current pool name is #{pool_name}"
+  log "  Current  FULL pool name is #{pool_name_full}"
   # if pool_name include "/" we assume that we have URI in tag so we will
   # generate new acls and conditions
 
   # pool_name = "/appserver"
   # pool_name = "host.com/appserver"
-  case pool_name
-    when (pool_name.include? "+")
-        # replace all '/' to "_"
-        acl_name =pool_name.gsub(/[\/]/, '_')
+  acl_config_file = "/home/lb/#{node[:lb][:service][:provider]}.d/acl_#{pool_name}.conf"
+  file acl_config_file
 
-        # RESULT EXAMPLE
-        # acl url_serverid  path_beg    /serverid
+  backend_config_file = "/home/lb/#{node[:lb][:service][:provider]}.d/use_backend_#{pool_name}.conf"
+  file backend_config_file
+
+  condition_type = "FQDN"
+  condition_type = "URI" if pool_name_full.include? "/"
+
+  case condition_type
+    when "URI"
+      # RESULT EXAMPLE
+      # acl url_serverid  path_beg    /serverid
+      acl_rule = "acl acl_#{pool_name} path_beg #{pool_name_full}"
       bash "Creating acl rules config file" do
-           flags "-ex"
-           code <<-EOH
-           acl_condition="acl acl_#{acl_name} path_beg #{pool_name}"
-           echo $acl_condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/acl.conf
-           EOH
+        flags "-ex"
+        code <<-EOH
+          acl_condition="#{acl_rule}"
+          echo $acl_condition >> #{acl_config_file}
+        EOH
+        not_if do ::File.open(acl_config_file, 'r') { |f| f.read }.include? "#{acl_rule}" end
       end
+
       # RESULT EXAMPLE
       # use_backend 2_backend if url_serverid
+      use_backend_rule = "use_backend #{pool_name}_backend if acl_#{pool_name}"
       bash "Creating use_backend rule configs" do
         flags "-ex"
         code <<-EOH
-          condition="use_backend #{pool_name}_backend if acl_#{acl_name}"
-          echo $condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/use_backend.conf
+          condition="#{use_backend_rule}"
+          echo $condition >> #{backend_config_file}
         EOH
-        # recreating rightscale_lb.cfg
+        not_if do ::File.open(backend_config_file, 'r') { |f| f.read }.include? "#{use_backend_rule}" end
         notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
       end
 
@@ -235,27 +250,26 @@ action :advanced_configs do
 
       # RESULT EXAMPLE
       # acl ns-ss-db1-test-rightscale-com_acl  hdr_dom(host) -i ns-ss-db1.test.rightscale.com
+      acl_rule = "acl acl_#{new_resource.pool_name} hdr_dom(host) -i #{new_resource.pool_name}"
       bash "Creating acl rules config file" do
         flags "-ex"
         code <<-EOH
-           acl_condition="acl acl_#{new_resource.pool_name} hdr_dom(host) -i #{new_resource.pool_name}"
-           echo $acl_condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/acl.conf
+           acl_condition="#{acl_rule}"
+           echo $acl_condition >> #{acl_config_file}
         EOH
+        not_if do ::File.open(acl_config_file, 'r') { |f| f.read }.include? "#{acl_rule}" end
       end
 
-      # now we will create "/home/lb/haproxy.d/advanced_configs/use_backend.conf"
-      #
-      # CODE DRAFT EXAMPLE
-      # use_backend #{lb:pool_name} node[:lb][:advanced_config][:use_backend_condition] ns-ss-db1-test-rightscale-com_acl
       # RESULT EXAMPLE
       # use_backend 1_backend if ns-ss-db1-test-rightscale-com_acl
+      use_backend_rule = "use_backend pool_#{new_resource.pool_name} if acl_#{new_resource.pool_name}"
       bash "Creating use_backend rule configs" do
         flags "-ex"
         code <<-EOH
-          condition="use_backend pool_#{new_resource.pool_name} if acl_#{new_resource.pool_name}"
-          echo $condition >> /home/lb/#{node[:lb][:service][:provider]}.d/#{pool_name}/use_backend.conf
+          condition="#{use_backend_rule}"
+          echo $condition >> #{backend_config_file}
         EOH
-        # recreating rightscale_lb.cfg
+        not_if do ::File.open(backend_config_file, 'r') { |f| f.read }.include? "#{use_backend_rule}" end
         notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
       end
 

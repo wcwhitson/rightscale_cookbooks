@@ -16,8 +16,7 @@ node[:lb][:service][:provider] = "lb_haproxy"
 
 vhosts(node[:lb][:pool_names]).each do |pool_name_short, pool_name_full|
   log "  Setup default load balancer resource for vhost '#{pool_name_short}'."
-  # replace all '/' to "_"
-  #pool_name_short = pool_name.gsub(/[\/]/, '_')
+  log "  load balancer vhost full name is '#{pool_name_full}'."
 
   lb pool_name_short do
     provider "lb_haproxy"

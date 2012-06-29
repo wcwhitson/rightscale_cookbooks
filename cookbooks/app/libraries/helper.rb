@@ -43,7 +43,7 @@ module RightScale
 
       def vhosts(vhost_list)
 
-        vhost_full_name = vhost_list.gsub(/\s+/, "").split(", ").uniq.each
+        vhost_full_name = vhost_list.gsub(/\s+/, "").split(",").uniq.each
         vhost_norm_name = vhost_list.gsub(/[\/]/, '_').split(", ").uniq.each
         vhost_list_temp = Hash[vhost_norm_name.zip vhost_full_name]
         return vhost_list_temp
