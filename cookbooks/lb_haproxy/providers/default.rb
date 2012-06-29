@@ -188,16 +188,16 @@ action :attach do
       :session_sticky => new_resource.session_sticky,
       :health_check_uri => node[:lb][:health_check_uri]
     )
-    #notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
+    notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
   end
 
-  node[:lb][:advanced_configuration]= true
-  # this will add  /advanced_configs directory
-  # and home/lb/haproxy-cat.sh will create new
+
   action_advanced_configs
-  #if node[:lb][:advanced_configuration]== true
+
+
 
 end
+
 action :advanced_configs do
 
   pool_name = new_resource.pool_name
@@ -208,8 +208,6 @@ action :advanced_configs do
   # if pool_name include "/" we assume that we have URI in tag so we will
   # generate new acls and conditions
 
-  # pool_name = "/appserver"
-  # pool_name = "host.com/appserver"
   acl_config_file = "/home/lb/#{node[:lb][:service][:provider]}.d/acl_#{pool_name}.conf"
   file acl_config_file
 
@@ -274,7 +272,15 @@ action :advanced_configs do
         notifies :run, resources(:execute => "/home/lb/haproxy-cat.sh")
       end
 
-# case end
+
+  end
+
+  execute "/home/lb/haproxy-cat.sh" do
+    user "haproxy"
+    group "haproxy"
+    umask 0077
+    action :run
+    notifies :reload, resources(:service => "haproxy")
   end
 
 end
