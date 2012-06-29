@@ -59,7 +59,7 @@ action :install do
       :stats_file_line => stats_file
     )
   end
-
+  pool_name = new_resource.pool_name
   # Install the haproxy config backend which is the part of the haproxy config that doesn't change.
   template "/home/lb/rightscale_lb.cfg.default_backend" do
     source "haproxy_default_backend.erb"
@@ -67,9 +67,10 @@ action :install do
     owner "haproxy"
     group "haproxy"
     mode "0400"
-    default_backend = node[:lb][:pool_names].gsub(/\s+/, "").split(",").first.gsub(/\./, "_") + "_backend"
+    #default_backend = node[:lb][:pool_names].gsub(/\s+/, "").split(",").first.gsub(/\./, "_") + "_backend"
     variables(
-      :default_backend_line => default_backend
+      #:default_backend_line => default_backend
+       :default_backend_line => "#{pool_name}_backend"
     )
   end
 
