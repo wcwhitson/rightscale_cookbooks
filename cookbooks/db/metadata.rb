@@ -87,16 +87,16 @@ attribute "db/dns/master/fqdn",
   :required => "required",
   :recipes => [ "db::default" ]
 
-attribute "db/dns/master/id",
-  :display_name => "Database Master DNS Record ID",
-  :description => "The unique identifier that is associated with the DNS A record of the master database server. The unique identifier is assigned by the DNS provider when you create a dynamic DNS A record. This ID is used to update the associated A record with the private IP address of the master server when this recipe is run. If you are using DNS Made Easy as your DNS provider, a 7-digit number is used (e.g., 4403234).",
-  :required => "required",
-  :recipes => [
-                "db::do_primary_restore_and_become_master",
-                "db::do_secondary_restore_and_become_master",
-                "db::do_init_and_become_master",
-                "db::do_promote_to_master"
-                ]
+#attribute "db/dns/master/id",
+#  :display_name => "Database Master DNS Record ID",
+#  :description => "The unique identifier that is associated with the DNS A record of the master database server. The unique identifier is assigned by the DNS provider when you create a dynamic DNS A record. This ID is used to update the associated A record with the private IP address of the master server when this recipe is run. If you are using DNS Made Easy as your DNS provider, a 7-digit number is used (e.g., 4403234).",
+#  :required => "required",
+#  :recipes => [
+#                "db::do_primary_restore_and_become_master",
+#                "db::do_secondary_restore_and_become_master",
+#                "db::do_init_and_become_master",
+#                "db::do_promote_to_master"
+#                ]
 
 attribute "db/dns/slave/fqdn",
   :display_name => "Database Slave FQDN",
