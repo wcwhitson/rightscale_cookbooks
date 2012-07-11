@@ -12,8 +12,9 @@ rightscale_marker :begin
 # Make sure to run this recipe after the php application server default recipe
 # to ensure that it does not over write these values.
 
-node[:db_mysql][:bind_address] = "localhost"
-log "  LAMP set MySQL to listen on #{node[:db_mysql][:bind_address]}"
+# Don't reset the binding or this breaks the MySQL replication config
+#node[:db_mysql][:bind_address] = "localhost"
+#log "  LAMP set MySQL to listen on #{node[:db_mysql][:bind_address]}"
 
 node[:app][:port] = "80"
 log "  LAMP set Apache to listen on port #{node[:app][:port]}"
